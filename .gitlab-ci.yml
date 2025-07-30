@@ -1,0 +1,21 @@
+stages:
+  - notify
+
+telegram_notify:
+  stage: notify
+  image: telegram-messenger:latest
+  tags: [default]
+  script:
+    - echo "Sending Telegram notification..."
+  only:
+    - branches
+  except:
+    - tags
+  variables:
+    THREAD_ID: ${DEPLOY_ID}
+    TEXT: |
+      *Push By $GITLAB_USER_NAME*
+      Project: $CI_PROJECT_NAME
+      Branch: $CI_COMMIT_BRANCH
+      Commit: [$CI_COMMIT_SHORT_SHA]($CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA)
+  when: always
