@@ -12,6 +12,7 @@ telegram_notify:
   except:
     - tags
   variables:
+    CHAT_ID: ${DEVTEAM_ID}
     THREAD_ID: ${DEPLOY_ID}
     TEXT: |
       *Push By $GITLAB_USER_NAME*
