@@ -41,8 +41,11 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
      - `CHAT_ID`: Your chat ID ( I set in gitlab set `DEVTEAM_ID` and use that in Variables of .gitlab-ci.yml )
      - `Thread_ID`: Your thread chat ID ( I set in gitlab set `DEPLOY_ID` and use that in Variables of .gitlab-ci.yml )
 
-2. **Add `.gitlab-ci.yml`** in your project
-3. Now everyone push the project, send messege in your group
+2. **Add `.gitlab-ci.yml` in your project**
+   - In your .gitlab-ci.yml file, use only one of the following variables to control the message:
+      - `PUSH`: Set this to TRUE to send the standard, automated push notification.
+      - `TEXT`: Use this to send a completely custom message instead.
+3. **Now everyone push the project, send messege in your group**
 
 ### Method 2: Manual Docker Execution
 
@@ -51,7 +54,7 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
    docker run --rm \
      -e BOT_TOKEN="your_bot_token_here" \
      -e CHAT_ID="your_chat_id_here" \
-     -e TEXT="Hello!" \
+     -e TEXT="Hello World!" \
      telegram-messenger
    ```
 
@@ -61,6 +64,6 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
      -e BOT_TOKEN="your_bot_token_here" \
      -e CHAT_ID="your_chat_id_here" \
      -e THREAD_ID="your_message_thread_id" \
-     -e TEXT="Hello!" \
+     -e TEXT="Hello World!" \
      telegram-messenger
    ```

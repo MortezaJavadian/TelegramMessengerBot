@@ -1,7 +1,12 @@
 #!/bin/sh
 
-if [ -z "$TEXT" ]; then
+if [ -z "$TEXT" ] && [ -z "$PUSH" ]; then
   echo "TEXT environment variable is not set"
+  exit 1
+fi
+
+if [ -n "$TEXT" ] && [ -n "$PUSH" ]; then
+  echo "Both PUSH and TEXT variables are set. Please use only one."
   exit 1
 fi
 
@@ -15,6 +20,23 @@ if [ -n "$THREAD_ID" ]; then
   THREAD_ARG="-d message_thread_id=${THREAD_ID}"
 else
   THREAD_ARG=""
+fi
+
+if [ "$PUSH" = "TRUE" ]; then
+  TEXT=$(cat <<-EOF
+*Push by $GITLAB_USER_NAME*
+
+*Project:* \`$CI_PROJECT_PATH\`
+*Branch:* \`$CI_COMMIT_BRANCH\`
+
+*Commit Message:*
+\`$CI_COMMIT_MESSAGE\`
+
+*Details:*
+- *Commit:* [$CI_COMMIT_SHORT_SHA]($CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA)
+- *Pipeline:* [#$CI_PIPELINE_ID]($CI_PIPELINE_URL)
+EOF
+)
 fi
 
 response=$(curl -s -w "%{http_code}" -o /tmp/telegram_response.txt \
