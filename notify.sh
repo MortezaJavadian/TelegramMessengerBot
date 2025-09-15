@@ -1,12 +1,17 @@
 #!/bin/sh
 
-if [ -z "$TEXT" ] && [ -z "$PUSH" ]; then
+if [ -z "$FILE" ] && [ -z "$TEXT" ] && [ -z "$PUSH" ]; then
   echo "TEXT environment variable is not set"
   exit 1
 fi
 
 if [ -n "$TEXT" ] && [ -n "$PUSH" ]; then
   echo "Both PUSH and TEXT variables are set. Please use only one."
+  exit 1
+fi
+
+if [ -n "$FILE" ] && [ -n "$PUSH" ]; then
+  echo "Both PUSH and FILE variables are set. Please use only one."
   exit 1
 fi
 
@@ -17,9 +22,11 @@ fi
 
 # argument for message_thread_id
 if [ -n "$THREAD_ID" ]; then
-  THREAD_ARG="-d message_thread_id=${THREAD_ID}"
+  THREAD_ARG_TEXT="-d message_thread_id=${THREAD_ID}"
+  THREAD_ARG_FILE="-F message_thread_id=${THREAD_ID}"
 else
-  THREAD_ARG=""
+  THREAD_ARG_TEXT=""
+  THREAD_ARG_FILE=""
 fi
 
 if [ "$PUSH" = "TRUE" ]; then
@@ -39,12 +46,29 @@ EOF
 )
 fi
 
-response=$(curl -s -w "%{http_code}" -o /tmp/telegram_response.txt \
-  "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-  -d chat_id="${CHAT_ID}" \
-  $THREAD_ARG \
-  -d text="${TEXT}" \
-  -d parse_mode="Markdown")
+# Handle file sending
+if [ -n "$FILE" ]; then
+  if [ ! -f "$FILE" ]; then
+    echo "File not found: $FILE"
+    exit 1
+  fi
+  
+  # Send document
+  response=$(curl -s -w "%{http_code}" -o /tmp/telegram_response.txt \
+    "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
+    -F chat_id="${CHAT_ID}" \
+    $THREAD_ARG_FILE \
+    -F document=@"${FILE}" \
+    -F caption="${TEXT}")
+else
+  # Send text message (existing logic)
+  response=$(curl -s -w "%{http_code}" -o /tmp/telegram_response.txt \
+    "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+    -d chat_id="${CHAT_ID}" \
+    $THREAD_ARG_TEXT \
+    -d text="${TEXT}" \
+    -d parse_mode="Markdown")
+fi
 
 if [ "$response" -eq 200 ]; then
   echo "Message sent successfully!"
