@@ -9,7 +9,7 @@ telegram_test:
   script:
     - echo "Running Telegram Test..."
     # To simulate failure, uncomment the next line
-    - exit 1
+    # - exit 1
     - echo "Telegram Test results" > telegram-test.txt
   artifacts:
     paths:

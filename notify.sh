@@ -81,10 +81,12 @@ else
     -d parse_mode="Markdown")
 fi
 
-if [ "$response" -eq 200 ]; then
+http_code=$(echo "$response" | cut -c1-3)
+
+if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
   echo "Message sent successfully!"
 else
-  echo "Failed to send message. HTTP code: $response"
+  echo "Failed to send message. HTTP code: $http_code"
   echo "Response:"
   cat /tmp/telegram_response.txt
   exit 1
