@@ -6,7 +6,16 @@ stages:
 
 telegram_deploy:
   stage: deploy
+  image: docker:24-cli
+  services:
+    - docker:24-dind
   tags: [default]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_VERIFY: 1
+  before_script:
+    - docker info
   script:
     - echo "Building new telegram-messenger Docker image..."
     - docker build -t telegram-messenger:latest .
