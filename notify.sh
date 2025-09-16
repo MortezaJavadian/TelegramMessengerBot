@@ -29,19 +29,28 @@ else
   THREAD_ARG_FILE=""
 fi
 
+# argument for reply_to_message_id
+if [ -n "$REPLY_ID" ]; then
+  REPLY_ARG_TEXT="-d reply_to_message_id=${REPLY_ID}"
+  REPLY_ARG_FILE="-F reply_to_message_id=${REPLY_ID}"
+else
+  REPLY_ARG_TEXT=""
+  REPLY_ARG_FILE=""
+fi
+
 if [ "$PUSH" = "TRUE" ]; then
   TEXT=$(cat <<-EOF
-*Push by $GITLAB_USER_NAME*
+👨‍💻 *Push by $GITLAB_USER_NAME*
 
-*Project:* \`$CI_PROJECT_PATH\`
-*Branch:* \`$CI_COMMIT_BRANCH\`
+📂 *Project:* \`$CI_PROJECT_PATH\`
+🌿 *Branch:* \`$CI_COMMIT_BRANCH\`
 
-*Commit Message:*
+💬 *Commit Message:*
 \`$CI_COMMIT_MESSAGE\`
 
-*Details:*
-- *Commit:* [$CI_COMMIT_SHORT_SHA]($CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA)
-- *Pipeline:* [#$CI_PIPELINE_ID]($CI_PIPELINE_URL)
+🔍 *Details:*
+  🔗 *Commit:* [$CI_COMMIT_SHORT_SHA]($CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA)
+  ⚙️ *Pipeline:* [#$CI_PIPELINE_ID]($CI_PIPELINE_URL)
 EOF
 )
 fi
@@ -58,6 +67,7 @@ if [ -n "$FILE" ]; then
     "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
     -F chat_id="${CHAT_ID}" \
     $THREAD_ARG_FILE \
+    $REPLY_ARG_FILE \
     -F document=@"${FILE}" \
     -F caption="${TEXT}")
 else
@@ -66,6 +76,7 @@ else
     "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
     -d chat_id="${CHAT_ID}" \
     $THREAD_ARG_TEXT \
+    $REPLY_ARG_TEXT \
     -d text="${TEXT}" \
     -d parse_mode="Markdown")
 fi

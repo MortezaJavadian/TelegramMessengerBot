@@ -45,6 +45,9 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
    - In your .gitlab-ci.yml file, use only one of the following variables to control the message:
       - `PUSH`: Set this to TRUE to send the standard, automated push notification.
       - `TEXT`: Use this to send a completely custom message instead.
+      - `FILE`: Use this to send a test file (can be combined with TEXT as caption).
+   - Test results are automatically sent as reply to push notifications.
+   - Note: FILE path should match the artifact file path from your test job.
 3. **Now everyone push the project, send messege in your group**
 
 ### Method 2: Manual Docker Execution
@@ -75,7 +78,17 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
      -e CHAT_ID="your_chat_id_here" \
      -e THREAD_ID="your_message_thread_id" \
      -e FILE="/app/myfile" \
-     -e TEXT="Hello World!" \
+     -e TEXT="File caption here" \
      -v /path/to/your/local/file:/app/myfile \
+     telegram-messenger
+   ```
+
+4. **Usage with Reply**
+   ```bash
+   docker run --rm \
+     -e BOT_TOKEN="your_bot_token_here" \
+     -e CHAT_ID="your_chat_id_here" \
+     -e REPLY_ID="message_id_to_reply" \
+     -e TEXT="Reply message" \
      telegram-messenger
    ```

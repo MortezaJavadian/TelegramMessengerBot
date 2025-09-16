@@ -23,7 +23,12 @@ telegram_push_notify:
   tags: [default]
   script:
     - echo "Sending Telegram push notification..."
-    - /notify.sh
+    - /notify.sh > push_response.log 2>&1
+    - grep -o '"message_id":[0-9]*' /tmp/telegram_response.txt | grep -o '[0-9]*' > message_id.txt || echo "0" > message_id.txt
+  artifacts:
+    paths:
+      - message_id.txt
+    expire_in: 1 hour
   only:
     - branches
   except:
@@ -40,20 +45,22 @@ telegram_test_notify:
   tags: [default]
   dependencies:
     - telegram_test
+    - telegram_push_notify
   before_script:
     - |
       if [ -f "telegram-test.txt" ]; then
         export FILE="telegram-test.txt"
-        export TEXT="Telegram Test Succeeded"
+        export TEXT="✔️ Telegram Test Job Succeeded!"
       else
-        export TEXT="Telegram Test Failed"
+        export TEXT="❌ Telegram Test Job Failed!"
       fi
+    - export REPLY_ID=$(cat message_id.txt 2>/dev/null || echo "")
   script:
     - |
       if [ -f "telegram-test.txt" ]; then
-        echo "Test job succeeded. Sending Telegram Test results file..."
+        echo "Test job succeeded. Sending Telegram Test results file as reply..."
       else
-        echo "Test job failed. Sending failure telegram notification..."
+        echo "Test job failed. Sending failure telegram notification as reply..."
       fi
     - /notify.sh
   only:
