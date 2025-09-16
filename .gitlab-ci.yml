@@ -43,11 +43,11 @@ telegram_test_notify:
     - |
       if [ -f "telegram-test.txt" ]; then
         echo "Test job succeeded. Sending Telegram Test results file..."
-        export FILE="telegram-test.txt"
-        export TEXT="Telegram Test Succeeded"
+        FILE="telegram-test.txt"
+        TEXT="Telegram Test Succeeded"
       else
         echo "Test job failed. Sending failure telegram notification..."
-        export TEXT="Telegram Test Failed"
+        TEXT="Telegram Test Failed"
       fi
   only:
     - branches
