@@ -11,9 +11,8 @@ telegram_deploy:
     - docker:24-dind
   tags: [default]
   variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_TLS_VERIFY: 1
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
   before_script:
     - docker info
   script:
