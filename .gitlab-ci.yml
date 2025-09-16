@@ -1,12 +1,55 @@
 stages:
-  - notify
+  - test
+  - test-notify
+  - push-notify
 
-telegram_notify:
-  stage: notify
+telegram_test:
+  stage: test
+  tags: [default]
+  script:
+    - echo "Running Telegram Test..."
+    # To simulate failure, uncomment the next line
+    # - exit 1
+    - echo "Telegram Test results for pipeline #$CI_PIPELINE_ID" > telegram-test.txt
+  artifacts:
+    paths:
+      - telegram-test.txt
+    expire_in: 1 hour
+    when: always
+
+telegram_test_notify:
+  stage: test-notify
+  image: telegram-messenger:latest
+  tags: [default]
+  dependencies:
+    - telegram_test
+  script:
+    - |
+      if [ -f "telegram-test.txt" ]; then
+        echo "Test job succeeded. Sending Telegram Test results file..."
+        export FILE="telegram-test.txt"
+        export TEXT="Telegram Test succeeded - ${CI_PROJECT_NAME}
+        - **Pipeline:** ${CI_PIPELINE_URL}"
+      else
+        echo "Test job failed. Sending failure telegram notification..."
+        export TEXT="Telegram Test failed - ${CI_PROJECT_NAME}
+        - **Pipeline:** ${CI_PIPELINE_URL}"
+      fi
+  only:
+    - branches
+  except:
+    - tags
+  variables:
+    CHAT_ID: ${DEVTEAM_ID}
+    THREAD_ID: ${TEST_ID}
+  when: always
+
+telegram_push_notify:
+  stage: push-notify
   image: telegram-messenger:latest
   tags: [default]
   script:
-    - echo "Sending Telegram notification..."
+    - echo "Sending Telegram push notification..."
   only:
     - branches
   except:

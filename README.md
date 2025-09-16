@@ -67,3 +67,15 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
      -e TEXT="Hello World!" \
      telegram-messenger
    ```
+
+3. **Usage with File and Thread**
+   ```bash
+   docker run --rm \
+     -e BOT_TOKEN="your_bot_token_here" \
+     -e CHAT_ID="your_chat_id_here" \
+     -e THREAD_ID="your_message_thread_id" \
+     -e FILE="/app/myfile" \
+     -e TEXT="Hello World!" \
+     -v /path/to/your/local/file:/app/myfile \
+     telegram-messenger
+   ```
