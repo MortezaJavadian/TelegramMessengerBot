@@ -1,7 +1,20 @@
 stages:
+  - deploy
   - test
   - push-notify
   - test-notify
+
+telegram_deploy:
+  stage: deploy
+  tags: [default]
+  script:
+    - echo "Building new telegram-messenger Docker image..."
+    - docker build -t telegram-messenger:latest .
+    - echo "Cleaning up old Docker images..."
+    - docker image prune -f --filter "label!=keep"
+    - echo "Docker image built and old images cleaned up successfully!"
+  only:
+    - main
 
 telegram_test:
   stage: test
@@ -21,6 +34,8 @@ telegram_push_notify:
   stage: push-notify
   image: telegram-messenger:latest
   tags: [default]
+  dependencies:
+    - telegram_deploy
   script:
     - echo "Sending Telegram push notification..."
   only:
@@ -38,6 +53,7 @@ telegram_test_notify:
   image: telegram-messenger:latest
   tags: [default]
   dependencies:
+    - telegram_deploy
     - telegram_test
   before_script:
     - |
