@@ -10,7 +10,7 @@ telegram_test:
     - echo "Running Telegram Test..."
     # To simulate failure, uncomment the next line
     # - exit 1
-    - echo "Telegram Test results for pipeline #${CI_PIPELINE_ID}" > telegram-test.txt
+    - echo "Telegram Test results" > telegram-test.txt
   artifacts:
     paths:
       - telegram-test.txt
