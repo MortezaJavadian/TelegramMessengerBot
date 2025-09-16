@@ -23,6 +23,7 @@ telegram_push_notify:
   tags: [default]
   script:
     - echo "Sending Telegram push notification..."
+    - /notify.sh
   only:
     - branches
   except:
@@ -54,6 +55,7 @@ telegram_test_notify:
       else
         echo "Test job failed. Sending failure telegram notification..."
       fi
+    - /notify.sh
   only:
     - branches
   except:
