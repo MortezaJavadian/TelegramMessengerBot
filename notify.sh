@@ -39,6 +39,9 @@ else
 fi
 
 if [ "$PUSH" = "TRUE" ]; then
+
+  COMMIT_TIME=$(date -d "$CI_COMMIT_TIMESTAMP" '+%Y-%m-%d %H:%M:%S %Z')
+
   if [ -n "$CI_COMMIT_TAG" ]; then
     TEXT=$(cat <<-EOF
 👨‍💻 *Push by $GITLAB_USER_NAME*
@@ -47,6 +50,7 @@ if [ "$PUSH" = "TRUE" ]; then
 📂 *Project:* \`$CI_PROJECT_PATH\`
 🌿 *Branch:* \`$CI_COMMIT_BRANCH\`
 🔖 *Tag:* \`$CI_COMMIT_TAG\`
+⏰ *Time:* \`$COMMIT_TIME\`
 
 💬 *Commit Message:*
 \`$CI_COMMIT_MESSAGE\`
@@ -63,6 +67,7 @@ EOF
 
 📂 *Project:* \`$CI_PROJECT_PATH\`
 🌿 *Branch:* \`$CI_COMMIT_BRANCH\`
+⏰ *Time:* \`$COMMIT_TIME\`
 
 💬 *Commit Message:*
 \`$CI_COMMIT_MESSAGE\`
