@@ -6,6 +6,8 @@ stages:
 telegram_test:
   stage: test
   tags: [default]
+  only:
+    - tags
   script:
     - echo "Running Telegram Test..."
     # To simulate failure, uncomment the next line
@@ -33,15 +35,21 @@ telegram_push_notify:
     CHAT_ID: ${DEVTEAM_ID}
     THREAD_ID: ${DEPLOY_ID}
     PUSH: "TRUE"
-  when: always
+  rules:
+    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
+      when: always
 
 telegram_test_notify:
   stage: test-notify
   image: telegram-messenger:latest
   tags: [default]
-  dependencies:
-    - telegram_test
-    - telegram_push_notify
+  only:
+    - tags
+  needs:
+    - job: telegram_test
+      artifacts: true
+    - job: telegram_push_notify
+      artifacts: true
   before_script:
     - |
       if [ -f "telegram-test.txt" ]; then
