@@ -39,7 +39,7 @@ else
 fi
 
 if [ "$PUSH" = "TRUE" ]; then
-
+  apk add --no-cache coreutils
   COMMIT_TIME=$(date -d "$CI_COMMIT_TIMESTAMP" '+%Y-%m-%d %H:%M:%S %Z')
 
   if [ -n "$CI_COMMIT_TAG" ]; then
