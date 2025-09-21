@@ -35,9 +35,7 @@ telegram_push_notify:
     CHAT_ID: ${DEVTEAM_ID}
     THREAD_ID: ${DEPLOY_ID}
     PUSH: "TRUE"
-  rules:
-    - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG'
-      when: always
+    when: always
 
 telegram_test_notify:
   stage: test-notify
