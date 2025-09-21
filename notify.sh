@@ -39,7 +39,26 @@ else
 fi
 
 if [ "$PUSH" = "TRUE" ]; then
-  TEXT=$(cat <<-EOF
+  if [ -n "$CI_COMMIT_TAG" ]; then
+    TEXT=$(cat <<-EOF
+👨‍💻 *Push by $GITLAB_USER_NAME*
+🏷️ **New Tag**
+
+📂 *Project:* \`$CI_PROJECT_PATH\`
+🌿 *Branch:* \`$CI_COMMIT_BRANCH\`
+🔖 *Tag:* \`$CI_COMMIT_TAG\`
+
+💬 *Commit Message:*
+\`$CI_COMMIT_MESSAGE\`
+
+🔍 *Details:*
+  🔗 *Commit:* [$CI_COMMIT_SHORT_SHA]($CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA)
+  ⚙️ *Pipeline:* [#$CI_PIPELINE_ID]($CI_PIPELINE_URL)
+  🏷️ *Tag Page:* [$CI_COMMIT_TAG]($CI_PROJECT_URL/-/tags/$CI_COMMIT_TAG)
+EOF
+)
+  else
+    TEXT=$(cat <<-EOF
 👨‍💻 *Push by $GITLAB_USER_NAME*
 
 📂 *Project:* \`$CI_PROJECT_PATH\`
@@ -53,6 +72,7 @@ if [ "$PUSH" = "TRUE" ]; then
   ⚙️ *Pipeline:* [#$CI_PIPELINE_ID]($CI_PIPELINE_URL)
 EOF
 )
+  fi
 fi
 
 # Handle file sending
