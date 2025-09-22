@@ -23,6 +23,7 @@ telegram_push_notify:
   stage: push-notify
   image: telegram-messenger:latest
   tags: [default]
+  cache: {}
   script:
     - echo "Sending Telegram push notification..."
     - /notify.sh > push_response.log 2>&1
@@ -41,6 +42,7 @@ telegram_test_notify:
   stage: test-notify
   image: telegram-messenger:latest
   tags: [default]
+  cache: {}
   only:
     - tags
   needs:
