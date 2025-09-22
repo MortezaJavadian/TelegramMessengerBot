@@ -1,26 +1,30 @@
 #!/bin/sh
 
-if [ -z "$FILE" ] && [ -z "$TEXT" ] && [ -z "$PUSH" ]; then
-  echo "TEXT environment variable is not set"
+# Check if at least one action variable is set
+if [ -z "$FILE" ] && [ -z "$TEXT" ] && [ -z "$PUSH" ] && [ -z "$FOLDER" ]; then
+  echo "Error: One of the environment variables TEXT, FILE, FOLDER, or PUSH must be set."
   exit 1
 fi
 
-if [ -n "$TEXT" ] && [ -n "$PUSH" ]; then
-  echo "Both PUSH and TEXT variables are set. Please use only one."
+# Ensure mutual exclusivity between action variables
+if [ -n "$PUSH" ]; then
+  if [ -n "$TEXT" ] || [ -n "$FILE" ] || [ -n "$FOLDER" ]; then
+    echo "Error: PUSH cannot be used with TEXT, FILE, or FOLDER."
+    exit 1
+  fi
+fi
+if [ -n "$FILE" ] && [ -n "$FOLDER" ]; then
+  echo "Error: Both FILE and FOLDER variables are set. Please use only one."
   exit 1
 fi
 
-if [ -n "$FILE" ] && [ -n "$PUSH" ]; then
-  echo "Both PUSH and FILE variables are set. Please use only one."
-  exit 1
-fi
-
+# Check for required credentials
 if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
   echo "BOT_TOKEN or CHAT_ID environment variable is not set"
   exit 1
 fi
 
-# argument for message_thread_id
+# Argument for message_thread_id
 if [ -n "$THREAD_ID" ]; then
   THREAD_ARG_TEXT="-d message_thread_id=${THREAD_ID}"
   THREAD_ARG_FILE="-F message_thread_id=${THREAD_ID}"
@@ -29,7 +33,7 @@ else
   THREAD_ARG_FILE=""
 fi
 
-# argument for reply_to_message_id
+# Argument for reply_to_message_id
 if [ -n "$REPLY_ID" ]; then
   REPLY_ARG_TEXT="-d reply_to_message_id=${REPLY_ID}"
   REPLY_ARG_FILE="-F reply_to_message_id=${REPLY_ID}"
@@ -38,6 +42,7 @@ else
   REPLY_ARG_FILE=""
 fi
 
+# Set standard text push for commits and tags
 if [ "$PUSH" = "TRUE" ]; then
   apk add --no-cache coreutils tzdata
   COMMIT_TIME=$(TZ='Asia/Tehran' date -d "$CI_COMMIT_TIMESTAMP" '+%H:%M:%S %Y-%m-%d')
@@ -95,6 +100,30 @@ if [ -n "$FILE" ]; then
     $REPLY_ARG_FILE \
     -F document=@"${FILE}" \
     -F caption="${TEXT}")
+
+elif [ -n "$FOLDER" ]; then
+  if [ ! -d "$FOLDER" ]; then
+    echo "Directory not found: $FOLDER"
+    exit 1
+  fi
+
+  # Install zip utility
+  apk add --no-cache zip
+
+  # Create a temporary zip file
+  ZIP_FILE="/tmp/$(basename "$FOLDER").zip"
+  echo "Zipping folder: $FOLDER to $ZIP_FILE"
+  zip -r "$ZIP_FILE" "$FOLDER"
+
+  # Send the zipped folder
+  response=$(curl -s -w "%{http_code}" -o /tmp/telegram_response.txt \
+    "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
+    -F chat_id="${CHAT_ID}" \
+    $THREAD_ARG_FILE \
+    $REPLY_ARG_FILE \
+    -F document=@"${ZIP_FILE}" \
+    -F caption="${TEXT}")
+  
 else
   # Send text message (existing logic)
   response=$(curl -s -w "%{http_code}" -o /tmp/telegram_response.txt \
