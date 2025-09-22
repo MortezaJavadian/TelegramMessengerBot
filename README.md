@@ -93,8 +93,8 @@ A simple Docker-based Telegram bot for sending automated messages. Perfect for C
      -v /path/to/your/local/folder:/app/myfolder \
      telegram-messenger
   ```
-  
-4. **Usage with Reply**
+
+5. **Usage with Reply**
    ```bash
    docker run --rm \
      -e BOT_TOKEN="your_bot_token_here" \
