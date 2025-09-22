@@ -17,7 +17,7 @@ telegram_test:
     paths:
       - telegram-test.txt
     expire_in: 1 hour
-    when: always
+  when: always
 
 telegram_push_notify:
   stage: push-notify
