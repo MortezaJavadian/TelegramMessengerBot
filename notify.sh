@@ -177,9 +177,11 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
     "${MATTERMOST_URL}/api/v4/teams/name/${MATTERMOST_TEAM_NAME}" \
     -H "Authorization: Bearer ${MATTERMOST_TOKEN}")
   
-  MATTERMOST_TEAM_ID=$(echo "$team_response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+  # Use jq for safe JSON parsing
+  MATTERMOST_TEAM_ID=$(echo "$team_response" | jq -r .id)
   
-  if [ -z "$MATTERMOST_TEAM_ID" ]; then
+  # Check if team ID is valid (jq returns "null" string for missing keys)
+  if [ "$MATTERMOST_TEAM_ID" = "null" ] || [ -z "$MATTERMOST_TEAM_ID" ]; then
     echo "Error: Could not retrieve team ID for team: $MATTERMOST_TEAM_NAME"
     echo "Response: $team_response"
     exit 1
@@ -190,9 +192,11 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
     "${MATTERMOST_URL}/api/v4/teams/${MATTERMOST_TEAM_ID}/channels/name/${MATTERMOST_CHANNEL_NAME}" \
     -H "Authorization: Bearer ${MATTERMOST_TOKEN}")
   
-  MATTERMOST_CHANNEL_ID=$(echo "$channel_response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+  # Use jq for safe JSON parsing
+  MATTERMOST_CHANNEL_ID=$(echo "$channel_response" | jq -r .id)
   
-  if [ -z "$MATTERMOST_CHANNEL_ID" ]; then
+  # Check if channel ID is valid
+  if [ "$MATTERMOST_CHANNEL_ID" = "null" ] || [ -z "$MATTERMOST_CHANNEL_ID" ]; then
     echo "Error: Could not retrieve channel ID for channel: $MATTERMOST_CHANNEL_NAME"
     echo "Response: $channel_response"
     exit 1
@@ -216,10 +220,11 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
       -F "files=@${FILE}" \
       -F "channel_id=${MATTERMOST_CHANNEL_ID}")
     
-    # Extract file_id from response
-    file_id=$(echo "$upload_response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+    # Extract file_id from response using jq for safe JSON parsing
+    file_id=$(echo "$upload_response" | jq -r .file_infos[0].id)
     
-    if [ -z "$file_id" ]; then
+    # Check if file_id is valid
+    if [ "$file_id" = "null" ] || [ -z "$file_id" ]; then
       echo "Error: Failed to upload file to Mattermost"
       echo "Response: $upload_response"
       exit 1
@@ -227,11 +232,19 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
     
     echo "File uploaded successfully. File ID: $file_id"
     
-    # Send message with file attached
+    # Send message with file attached using jq for proper JSON escaping
     if [ -n "$TEXT" ]; then
-      message_payload="{\"channel_id\":\"${MATTERMOST_CHANNEL_ID}\",\"message\":\"${TEXT}\",\"file_ids\":[\"${file_id}\"]}"
+      # Use jq to properly escape the message text
+      message_payload=$(jq -n \
+        --arg channel_id "$MATTERMOST_CHANNEL_ID" \
+        --arg message "$TEXT" \
+        --arg file_id "$file_id" \
+        '{channel_id: $channel_id, message: $message, file_ids: [$file_id]}')
     else
-      message_payload="{\"channel_id\":\"${MATTERMOST_CHANNEL_ID}\",\"message\":\"\",\"file_ids\":[\"${file_id}\"]}"
+      message_payload=$(jq -n \
+        --arg channel_id "$MATTERMOST_CHANNEL_ID" \
+        --arg file_id "$file_id" \
+        '{channel_id: $channel_id, message: "", file_ids: [$file_id]}')
     fi
     
     response=$(curl -s -w "\n%{http_code}" -X POST \
@@ -262,10 +275,11 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
       -F "files=@${ZIP_FILE}" \
       -F "channel_id=${MATTERMOST_CHANNEL_ID}")
     
-    # Extract file_id from response
-    file_id=$(echo "$upload_response" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+    # Extract file_id from response using jq for safe JSON parsing
+    file_id=$(echo "$upload_response" | jq -r .file_infos[0].id)
     
-    if [ -z "$file_id" ]; then
+    # Check if file_id is valid
+    if [ "$file_id" = "null" ] || [ -z "$file_id" ]; then
       echo "Error: Failed to upload zip file to Mattermost"
       echo "Response: $upload_response"
       exit 1
@@ -273,11 +287,19 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
     
     echo "Zip file uploaded successfully. File ID: $file_id"
     
-    # Send message with zip file attached
+    # Send message with zip file attached using jq for proper JSON escaping
     if [ -n "$TEXT" ]; then
-      message_payload="{\"channel_id\":\"${MATTERMOST_CHANNEL_ID}\",\"message\":\"${TEXT}\",\"file_ids\":[\"${file_id}\"]}"
+      # Use jq to properly escape the message text
+      message_payload=$(jq -n \
+        --arg channel_id "$MATTERMOST_CHANNEL_ID" \
+        --arg message "$TEXT" \
+        --arg file_id "$file_id" \
+        '{channel_id: $channel_id, message: $message, file_ids: [$file_id]}')
     else
-      message_payload="{\"channel_id\":\"${MATTERMOST_CHANNEL_ID}\",\"message\":\"\",\"file_ids\":[\"${file_id}\"]}"
+      message_payload=$(jq -n \
+        --arg channel_id "$MATTERMOST_CHANNEL_ID" \
+        --arg file_id "$file_id" \
+        '{channel_id: $channel_id, message: "", file_ids: [$file_id]}')
     fi
     
     response=$(curl -s -w "\n%{http_code}" -X POST \
@@ -287,8 +309,12 @@ elif [ "$NOTIFICATION_TARGET" = "mattermost" ]; then
       -d "$message_payload")
     
   else
-    # Send text message only
-    message_payload="{\"channel_id\":\"${MATTERMOST_CHANNEL_ID}\",\"message\":\"${TEXT}\"}"
+    # Send text message only using jq for proper JSON escaping
+    # This prevents JSON syntax errors from special characters, newlines, etc.
+    message_payload=$(jq -n \
+      --arg channel_id "$MATTERMOST_CHANNEL_ID" \
+      --arg message "$TEXT" \
+      '{channel_id: $channel_id, message: $message}')
     
     response=$(curl -s -w "\n%{http_code}" -X POST \
       "${MATTERMOST_URL}/api/v4/posts" \
